@@ -1,5 +1,6 @@
 #include <battle.h>
 #include <stdlib.h>
+#include <game.h>
 
 lpUIUnitBattle UIUnitBattleMk(UI*, Battle*);
 err_t UIUnitBattleDel(UI*, lpUIUnitBattle);
@@ -29,7 +30,6 @@ err_t BattleInit(
 	if(err < 0) return err;
 
 	if(!battle) {
-
 		UIErrLogPuts(ui, "BattleInit[Fatal]: UI is null. ");
 		return -1;
 	}

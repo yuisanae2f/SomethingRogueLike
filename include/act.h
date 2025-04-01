@@ -4,6 +4,11 @@
 #include "./battle.h"
 #include "./UI.h"
 
+typedef struct Stat Stat;
+typedef struct Battle Battle;
+typedef BATTLE_TEAMC_T battle_teamc_t;
+typedef BATTLE_FIGHTERC_T battle_fighterc_t;
+
 /**
  * The behaviour
  * */

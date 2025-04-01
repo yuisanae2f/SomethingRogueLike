@@ -11,6 +11,8 @@
 #include <ae2f/Cast.h>
 #include <ae2f/Call.h>
 
+#include "./str.h"
+
 /**
  * Healthcheck. \n
  * 0 for healthy. \n
@@ -39,9 +41,6 @@ UIUnit
  * */
 , *lpUIUnitBattle;
 
-
-#include "./unit.h"
-#include "./game.h"
 
 /** @brief standard indexing for lpUIUnitBattle */
 #define UIUnitBattleIdxer(fighteri, teami)	((teami) * BATTLE_FIGHTER_MAX + (fighteri))
@@ -76,6 +75,8 @@ typedef enum eUIGestures {
 
 	eUIGestures_LEN
 } eUIGestures;
+
+typedef struct Game Game;
 
 /**
  * @brief
@@ -146,8 +147,6 @@ err_t UIGesture(
  * */
 ae2f_extern ae2f_SHAREDCALL
 err_t UIVerify(UI*);
-
-#include "./str.h"
 
 ae2f_extern ae2f_SHAREDCALL
 err_t UILogPuts(

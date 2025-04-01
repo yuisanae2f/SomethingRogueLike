@@ -3,6 +3,8 @@
 
 #include "./UI.h"
 
+typedef struct UIGestureRet UIGestureRet;
+
 /** @brief The menu which could pop up whenever. */
 typedef struct SuperMenu {
 	unsigned char cursor;

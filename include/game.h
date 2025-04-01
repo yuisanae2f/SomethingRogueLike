@@ -5,6 +5,9 @@
 #include "./UI.h"
 #include "./supermenu.h"
 
+typedef BATTLE_TEAMC_T battle_teamc_t;
+typedef struct Battle Battle;
+
 /** @brief 
  * Game itself. 
  * Contains all logic for game.
