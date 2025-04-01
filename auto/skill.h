@@ -1,0 +1,2 @@
+#define SKILL_MAX	@SKILL_MAX@
+#define SKILLC_T	@SKILLC_T@
