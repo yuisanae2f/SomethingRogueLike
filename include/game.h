@@ -11,12 +11,15 @@ typedef struct Battle Battle;
 /** @brief 
  * Game itself. 
  * Contains all logic for game.
+ *
+ * It is meant to be initiated as zero.
  * */
 typedef struct Game {
 	battle_teamc_t whoareyou;
 	Battle battle;
 	SuperMenu supermenu;
 	UI* ui;
+	bool hastutorialpassed;
 } Game;
 
 #endif

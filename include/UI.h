@@ -22,38 +22,42 @@
 typedef int err_t;
 
 /** @brief General IO */
-typedef struct UI	UI;
+typedef struct UI		UI;
 
 /** @brief Selection Function IO */
-typedef struct UISel	UISel;
+typedef struct UISel		UISel;
 
+/** @brief Output UI for which has Name, and Description. */
+typedef struct UIND		UIND;
 
-typedef struct UIUnit	
-/** 
- * * @brief IO for Showing Unit 
- * * */
-UIUnit
+/** @brief The components related to UI. */
+typedef union UIComponent 	UIComponent;
 
-/** 
- * @brief 
- * Vector as UIUnit on context of Battle. 
- * This is meant to be a pointer.
+/**
+ * @brief
+ * Reload the UIND, as str_t and strlong_t
+ *
+ * Changes are not meant to be done for this function.
  * */
-, *lpUIUnitBattle;
+ae2f_extern ae2f_SHAREDCALL 
+err_t UINDLoad(
+		UI*
+		, UIND*
+		, const str_t
+		, const strlong_t
+		);
 
+ae2f_extern ae2f_SHAREDCALL
+err_t UIComponentLoad(
+		UI*
+		, UIComponent*
+		);
 
 /** @brief standard indexing for lpUIUnitBattle */
-#define UIUnitBattleIdxer(fighteri, teami)	((teami) * BATTLE_FIGHTER_MAX + (fighteri))
+#define UINDBattleIdxer(fighteri, teami)	((teami) * BATTLE_FIGHTER_MAX + (fighteri))
 
 /** @brief Count suggested for lpUIUnitBattle */ 
-#define UIUnitBattleSz				(BATTLE_TEAM_MAX * BATTLE_FIGHTER_MAX)
-
-/** @brief 
- * Parameter for `UIMk`
- *
- * Must not be 'alive' as class.
- * */
-typedef struct UIMkPrm		UIMkPrm;
+#define UINDBattleSz				(BATTLE_TEAM_MAX * BATTLE_FIGHTER_MAX)
 
 /** @brief 
  * Gestures, input for something
@@ -62,19 +66,34 @@ typedef enum eUIGestures {
 	/** @brief Nothing */
 	eUIGestures_NONE,
 
-	/** @brief Escape */
+	/** @brief 
+	 * Escape
+	 * */
 	eUIGestures_ESC,
 
 	/** @brief Cursor Move */
 	eUIGestures_MOV,
 
-	/** @brief Select */
-	eUIGestures_SEL,
+	/** @brief 
+	 * Hit, actual selection.
+	 *
+	 * UIGesture_t::extra would give you the cursor which is selected.
+	 * Negative value of UIGesture_t::extra means you don't need to change the cursor. 
+	 * */
+	eUIGestures_HIT,
+
+	/** @brief Toggle, Cursor Teleport */
+	eUIGestures_TOGGLE,
 
 	eUIGestures_SUPERMENU,
 
 	eUIGestures_LEN
 } eUIGestures;
+
+typedef struct UIGesture_t {
+	eUIGestures g;	/* gesture */
+	int extra;	/* extra */
+}  UIGesture_t;
 
 typedef struct Game Game;
 
@@ -85,8 +104,10 @@ typedef struct Game Game;
 typedef enum eUILocs {
 	/** @brief Renew this shit. */
 	eUILocs_NONE,
+
+	eUILocs_TUTORIAL,
+
 	eUILocs_BATTLE,
-	
 	eUILocs_BATTLE_INV,
 	eUILocs_BATTLE_SKILLMENU,
 	eUILocs_BATTLE_ITEM,
@@ -95,16 +116,14 @@ typedef enum eUILocs {
 	eUILocs_BATTLE_TARGET_MEMBER,
 	eUILocs_BATTLE_TEAM,
 	eUILocs_BATTLE_ANNOUNCING,
+	/* TITIL */
 	eUILocs_SUPERMENU,
-
-	/** @brief title */
-	eUILocs_TITIL,
 	eUILocs_LEN
 } eUILocs;
 
 /** @brief Make new UI. */
 ae2f_extern ae2f_SHAREDCALL
-UI* UIMk(const UIMkPrm*);
+UI* UIMk();
 
 /**
  * @brief Change, or initiate the state.
@@ -112,12 +131,26 @@ UI* UIMk(const UIMkPrm*);
 ae2f_extern ae2f_SHAREDCALL
 err_t UIInit(
 		UI*
-		,Game* /* Give him nothing to NOT change game pointer. */
-		,eUILocs
+
+		/**
+		 * @param game
+		 * Give him nothing to NOT change game pointer. 
+		 * */
+		, Game* 
+		, eUILocs
+
+		/**
+		 * @param component
+		 * Make new components and pass it via this pointer.
+		 * When passed zero, do not make new component for them.
+		 *
+		 * Releasing them must be performed manually.
+		 * */
+		, UIComponent* 
 		);
 
 /* Reload */
-#define UILoad(ui) UIInit(ui, 0, eUILocs_NONE)
+#define UILoad(ui) UIInit(ui, 0, eUILocs_NONE, 0)
 
 /** @brief return its parent, `Game`. */
 ae2f_extern ae2f_SHAREDCALL
@@ -127,19 +160,10 @@ Game* UIGamePtr(UI*);
 ae2f_extern ae2f_SHAREDCALL
 err_t UIDel(UI*);
 
-/** @brief Cursor, where you are pointing. */
-typedef unsigned int cursor_t;
-typedef struct UIGesturePrm	UIGesturePrm;
-typedef struct UIGestureRet {
-	eUIGestures g;	/* gesture */
-	int extra;	/* extra */
-} UIGestureRet;
-
 /** @brief Convert something to gesture */
 ae2f_extern ae2f_SHAREDCALL
-err_t UIGesture(
-		UIGestureRet*, 
-		UIGesturePrm /* you decide what to get as input */
+UIGesture_t UIGesture(
+		UI* 
 		);
 
 /** @brief 
@@ -171,7 +195,16 @@ err_t UILogClear(
  * Two of them will be ready, non-initiating needed.
  * */
 ae2f_extern ae2f_SHAREDCALL
-UISel*	UISelBattleMk(UI*);
+UISel
+*	UISelBattleMk(UI*)
+,*	UISelSuperMenuMk(UI*);
+
+/**
+ * @brief
+ * Load the selection.
+ * */
+ae2f_extern ae2f_SHAREDCALL
+err_t	UISelLoad(UI*, UISel*, const str_t);
 
 /**
  * @brief
@@ -179,7 +212,16 @@ UISel*	UISelBattleMk(UI*);
  *
  * */
 ae2f_extern ae2f_SHAREDCALL
-err_t	UISelBattleDel(UI*, UISel*);
+err_t	UISelDel(UI*, UISel*);
 
+union UIComponent {
+	struct {
+		UISel
+			* Back, 
+			* Save, 
+			* Load, 
+			* Quit;
+	} mSuperMenu;
+};
 
 #endif

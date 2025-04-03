@@ -9,7 +9,7 @@
 #include "./battle.auto.h"
 #include "./unit.h"
 #include "./ArrLike.h"
-#include <time.h>
+#include "./UI.h"
 #include <stdbool.h>
 
 /** @brief Battle Fighter Counter Type */
@@ -66,7 +66,7 @@ typedef struct Battle {
 	 * ui(showers, like output) for selections.
 	 * size is 2.
 	 * */
-	UISel* uisel;
+	UISel* selectors;
 
 	/**
 	 * @brief
@@ -74,37 +74,14 @@ typedef struct Battle {
 	 * 0: Team
 	 * 1: Inventory
 	 * */
-	bool uicursor;
+	bool cursor;
 
 	/**
 	 * @brief
 	 * UI for Unit.
 	 * size is maximum.
 	 * */
-	UIUnit* uiunit;
+	UIND* uiunit;
 } Battle;
-
-/**
- * @brief 
- * Load Battle. \n
- * Available on `BATTLE`. \n
- * This function is is initiator.
- *
- * Verifies Selection UI for Battle.
- *
- * Outputs:
- * - Log
- * - 
- *
- * Selections:
- * - SUPERMENU
- * - INV
- *
- * Needed:
- * - UISelBattleMk
- * - UIInit
- * */
-ae2f_extern ae2f_SHAREDCALL
-err_t BattleInit(Battle*, UI*);
 
 #endif

@@ -87,21 +87,15 @@ add_library(
 )
 
 target_link_libraries(_INTERFACE INTERFACE Core)
+target_include_directories(_INTERFACE INTERFACE "include")
 
 add_library(
-	_LIB
-	"source/battle.c"
+	_LIB INTERFACE
 )
 
-target_include_directories(_LIB PUBLIC "include")
-
-find_package(OpenGL REQUIRED)
-find_package(Vulkan REQUIRED)
 
 target_link_libraries(
-	_LIB PUBLIC 
-	OpenGL::OpenGL 
-	Vulkan::Vulkan
+	_LIB INTERFACE 
 	_INTERFACE
 )
 

@@ -3,29 +3,27 @@
 
 #include "./UI.h"
 
-typedef struct UIGestureRet UIGestureRet;
+/** @brief Indexing for Supermenu::Sel */
+typedef enum eSuperMenu {
+	/** @brief aka new game */
+	eSuperMenu_BACK,
+	eSuperMenu_SAVE,
+	eSuperMenu_LOAD,
+	eSuperMenu_QUIT,
+	eSuperMenu_LEN
+} eSuperMenu;
 
-/** @brief The menu which could pop up whenever. */
+/** @brief 
+ * The menu which could pop up whenever.
+ *
+ * - New Game (or Back to game)
+ * - Save
+ * - Load
+ * - Exit
+ * */
 typedef struct SuperMenu {
-	unsigned char cursor;
+	eSuperMenu cursor;
+	eUILocs last;
 } SuperMenu;
-
-ae2f_extern ae2f_SHAREDCALL
-err_t SuperMenuInit(
-		UI*
-		);
-
-ae2f_extern ae2f_SHAREDCALL
-err_t SuperMenuLoad(
-		SuperMenu*,
-		const UIGestureRet*,
-		UI*
-		);
-
-ae2f_extern ae2f_SHAREDCALL
-err_t SuperMenuDel(
-		SuperMenu*,
-		UI*
-		);
 
 #endif
