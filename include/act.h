@@ -2,12 +2,16 @@
 #define act_h
 
 #include "./battle.auto.h"
-#include "./UI.h"
+#include "./err.h"
+#include <ae2f/Call.h>
+#include <ae2f/Cast.h>
 
-typedef struct Unit Unit;
-typedef struct Battle Battle;
-typedef BATTLE_TEAMC_T battle_teamc_t;
-typedef BATTLE_FIGHTERC_T battle_fighterc_t;
+typedef struct	UI		UI;
+
+typedef struct	Unit 		Unit;
+typedef struct	Battle 		Battle;
+typedef BATTLE_TEAMC_T		battle_teamc_t;
+typedef BATTLE_FIGHTERC_T	battle_fighterc_t;
 
 /**
  * The behaviour

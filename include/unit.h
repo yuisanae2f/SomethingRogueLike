@@ -7,6 +7,7 @@
 
 typedef struct Unit {
 	str_t name;
+	strlong_t desc;
 	Stat stat;
 } Unit;
 

@@ -9,7 +9,6 @@
 #include "./battle.auto.h"
 #include "./unit.h"
 #include "./ArrLike.h"
-#include "./UI.h"
 #include <stdbool.h>
 
 /** @brief Battle Fighter Counter Type */
@@ -26,10 +25,10 @@ typedef BATTLE_TEAMC_T battle_teamc_t;
  * It is `ListLike`.
  * */
 typedef struct Battle_Team {
-	// vector, fighters.
+	/** @brief Battlers array */
 	battle_fighterv_t v;
 
-	// count
+	/** @brief Battler count  */
 	battle_fighterc_t c;
 
 	ArrLikeInjection(
@@ -37,6 +36,7 @@ typedef struct Battle_Team {
 			, battle_fighterc_t
 			);
 
+	/** @brief Inventory */
 	Inv inv;
 } Battle_Team;
 
@@ -45,7 +45,18 @@ typedef struct Battle_Team {
 /** @brief battle team vector */
 typedef Battle_Team battle_teamv_t[BATTLE_TEAM_MAX];
 
-/** @brief Contains all about battle. */
+typedef struct UIND	UIND;
+typedef struct UISel	UISel;
+
+/** 
+ * @brief 
+ * Contains all about battle.
+ *
+ * Treated as a plain data: 
+ * which means it must not contain any logic, including any pointers.
+ * 
+ * So we could have no difficulty for saving on minimal version, by just like fread, fwrite. 
+ * */
 typedef struct Battle {
 	/** @brief vector, team */
 	battle_teamv_t v;
@@ -54,34 +65,14 @@ typedef struct Battle {
 		/** @brief team count */
 		c, 
 		/** @brief whose turn is it */
-		turn;
+		turn,
+		/** @brief index of player */
+		whoareyou;
 
 	ArrLikeInjection(
 			, Battle_Team
 			, battle_teamc_t
 			);
-
-	/**
-	 * @brief
-	 * ui(showers, like output) for selections.
-	 * size is 2.
-	 * */
-	UISel* selectors;
-
-	/**
-	 * @brief
-	 * Cursor. \n
-	 * 0: Team
-	 * 1: Inventory
-	 * */
-	bool cursor;
-
-	/**
-	 * @brief
-	 * UI for Unit.
-	 * size is maximum.
-	 * */
-	UIND* uiunit;
 } Battle;
 
 #endif

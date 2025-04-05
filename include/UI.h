@@ -12,14 +12,8 @@
 #include <ae2f/Call.h>
 
 #include "./str.h"
+#include "./err.h"
 
-/**
- * Healthcheck. \n
- * 0 for healthy. \n
- * Positive for minour issues. \n
- * Negative for majour issues.
- * */
-typedef int err_t;
 
 /** @brief General IO */
 typedef struct UI		UI;
@@ -30,8 +24,19 @@ typedef struct UISel		UISel;
 /** @brief Output UI for which has Name, and Description. */
 typedef struct UIND		UIND;
 
+/** @brief 
+ * UI for dialog.
+ * Like stream, but less features.
+ * */
+typedef struct UILog		UILog;
+
 /** @brief The components related to UI. */
 typedef union UIComponent 	UIComponent;
+
+/** @brief
+ * UI for file (save, load).
+ * */
+typedef struct UIFile		UIFile;
 
 /**
  * @brief
@@ -95,7 +100,7 @@ typedef struct UIGesture_t {
 	int extra;	/* extra */
 }  UIGesture_t;
 
-typedef struct Game Game;
+typedef struct Battle Battle;
 
 /**
  * @brief
@@ -116,8 +121,12 @@ typedef enum eUILocs {
 	eUILocs_BATTLE_TARGET_MEMBER,
 	eUILocs_BATTLE_TEAM,
 	eUILocs_BATTLE_ANNOUNCING,
-	/* TITIL */
-	eUILocs_SUPERMENU,
+
+	/** @brief SuperMenu */
+	eUILocs_TITIL,
+	eUILocs_TITIL_SAVE,
+	eUILocs_TITIL_LOAD,
+
 	eUILocs_LEN
 } eUILocs;
 
@@ -136,7 +145,7 @@ err_t UIInit(
 		 * @param game
 		 * Give him nothing to NOT change game pointer. 
 		 * */
-		, Game* 
+		, Battle* 
 		, eUILocs
 
 		/**
@@ -151,10 +160,6 @@ err_t UIInit(
 
 /* Reload */
 #define UILoad(ui) UIInit(ui, 0, eUILocs_NONE, 0)
-
-/** @brief return its parent, `Game`. */
-ae2f_extern ae2f_SHAREDCALL
-Game* UIGamePtr(UI*);
 
 /** @brief Kill UI. */
 ae2f_extern ae2f_SHAREDCALL
@@ -175,7 +180,22 @@ err_t UIVerify(UI*);
 ae2f_extern ae2f_SHAREDCALL
 err_t UILogPuts(
 		UI*,
+		UILog*,
 		const char_t*
+		);
+
+/** @brief Clear the Log, like `cls` or `clear` on terminal output. */
+ae2f_extern ae2f_SHAREDCALL
+err_t UILogClear(
+		UI*,
+		UILog*
+		);
+
+/** @brief Kill the log, I mean, release the log. */
+ae2f_extern ae2f_SHAREDCALL
+err_t UILogDel(
+		UI*,
+		UILog*
 		);
 
 ae2f_extern ae2f_SHAREDCALL
@@ -183,21 +203,6 @@ err_t UIErrLogPuts(
 		UI*,
 		const char_t*
 		);
-
-ae2f_extern ae2f_SHAREDCALL
-err_t UILogClear(
-		UI*
-		);
-
-/**
- * @brief
- * Get selections.
- * Two of them will be ready, non-initiating needed.
- * */
-ae2f_extern ae2f_SHAREDCALL
-UISel
-*	UISelBattleMk(UI*)
-,*	UISelSuperMenuMk(UI*);
 
 /**
  * @brief
@@ -214,14 +219,62 @@ err_t	UISelLoad(UI*, UISel*, const str_t);
 ae2f_extern ae2f_SHAREDCALL
 err_t	UISelDel(UI*, UISel*);
 
+#include "./battle.h"
+
+typedef unsigned char	UIFilec_t;
+#define UIFile_MAX	3
+
 union UIComponent {
 	struct {
 		UISel
-			* Back, 
-			* Save, 
-			* Load, 
-			* Quit;
-	} mSuperMenu;
+			* Back, /** @brief 0 */ 
+			* Save, /** @brief 1 */
+			* Load, /** @brief 2 */
+			* Quit; /** @brief 3 */
+	} mTitil; /** @brief aka supermenu */
+
+	struct {
+		UIFile*	F[UIFile_MAX]; /** @brief 0 ~ 3 */
+		UILog*	Log;
+		UISel*	Titil;	/** @brief aka Menu, 3 */
+	} mTitilSave, mTitilLoad;
+
+	struct {
+		UIND*	Units[UINDBattleSz];
+		UISel
+			* Skill,	/** @brief 0 */
+			* Item,		/** @brief 1 */
+			* Menu;		/** @brief 2 */
+	} mBattle;
 };
+
+/** @brief Save battles to files */
+ae2f_extern ae2f_SHAREDCALL
+err_t 	UIFilePuts(
+		UI*
+		, UIFile*
+		, const Battle*
+		);
+
+/** @brief Load battles from files */
+ae2f_extern ae2f_SHAREDCALL
+err_t	UIFileGets(
+		UI*
+		, UIFile*
+		, Battle*
+		);
+
+ae2f_extern ae2f_SHAREDCALL
+err_t	UIFileLoad(
+		UI*
+		, UIFile*
+		, const str_t
+		);
+
+ae2f_extern ae2f_SHAREDCALL
+err_t	UIFileDel(
+		UI*
+		, UIFile*
+		);
 
 #endif

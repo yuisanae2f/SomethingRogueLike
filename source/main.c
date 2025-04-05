@@ -2,118 +2,298 @@
 #include <UI.h>
 #include <assert.h>
 
-err_t main() {
-MAINSTART:;
-	Game game = {0, };
-	game.supermenu.last = eUILocs_TUTORIAL;
-	game.ui = UIMk();
-	assert(UIVerify(game.ui) >= 0); /* When failed. */
-	UIGesture_t gesture;
-	UIComponent component = {0, };
+int main() { return 0; }
+
+#define game (*p_game)
+
+err_t GameMain(Game* p_game) {
+	/** @brief 
+	 * Contains number in state of error. 
+	 * 0 for okay.
+	 * */
 	err_t e;
-
-	goto SUPERMENUSTART;
-
-MAINEND: /* Programme is ending. */
-	return UIDel(game.ui);
 
 	/**
 	 * This section is Pathfinder.
-	 * Here, it will check game.supermenu.last for destination.
+	 * Here, it will check `dest` for destination.
 	 * */
 PATHFINDER:
-	assert(game.supermenu.last != eUILocs_LEN);
-	switch(game.supermenu.last) {
+
+	/* Global initiation sector */
+	assert(game.locdest != eUILocs_LEN);
+	assert(UIVerify(game.ui) >= 0);
+
+	if(!game.hastutorialpassed)
+		goto MAINSTART;
+
+	e = UIInit(game.ui, 0, game.locdest, &game.com);
+	assert(e >= 0);
+
+	switch(game.locdest) {
 		case eUILocs_LEN:
 			return -1;
+		case eUILocs_TITIL:
+			goto TITILSTART;
 
-		case eUILocs_SUPERMENU:
-			goto SUPERMENUSTART;
+		case eUILocs_TITIL_LOAD:
+		case eUILocs_TITIL_SAVE:
+			goto TITIL_SAVELOADSTART;
+
+		case eUILocs_BATTLE:
+			goto BATTLESTART;
 	}
 
 	return -1; /* Finding path has failed. */
 
-SUPERMENUSTART:
-	game.supermenu.cursor = eSuperMenu_BACK;
-	assert(game.supermenu.last != eUILocs_SUPERMENU);
-	assert(UIVerify(game.ui) >= 0);
+	/**
+	 * aka
+	 * - Super Menu 
+	 * - Main Menu
+	 * */
 
-	e = UIInit(
-			game.ui
-			, &game
-			, eUILocs_SUPERMENU
-			, &component
-			); 
-	assert(e);
+MAINSTART:
+	game = ae2f_RecordMk(Game, 0, );
+	game.loclast = eUILocs_TUTORIAL;
+	game.ui = UIMk();
 
-	assert(component.mSuperMenu.Back);
-	assert(component.mSuperMenu.Save);
-	assert(component.mSuperMenu.Load);
-	assert(component.mSuperMenu.Quit);
+	assert(UIVerify(game.ui) >= 0); /* When failed. */
+	/* init */
+	UIInit(game.ui, &game.battle, eUILocs_NONE, 0);
+	goto PATHFINDER;
+MAINEND: /* Programme is ending. */
+	return UIDel(game.ui);
+
+TITILSTART:
+	game.cursor.smenu = eSuperMenu_BACK;
+
+	assert(game.loclast != eUILocs_TITIL);
+	assert(game.com.mTitil.Back);
+	assert(game.com.mTitil.Save);
+	assert(game.com.mTitil.Load);
+	assert(game.com.mTitil.Quit);
 
 	e  = UISelLoad(
 			game.ui
-			, component.mSuperMenu.Back
+			, game.com.mTitil.Back
 			, game.hastutorialpassed 
 			? "Back to game" : "New Game"
 			);
 	e |= UISelLoad(
 			game.ui
-			, component.mSuperMenu.Load
+			, game.com.mTitil.Load
 			, "Load"
 			);
 	e |= UISelLoad(
 			game.ui
-			, component.mSuperMenu.Save
+			, game.com.mTitil.Save
 			, "Save"
 			);
 	e |= UISelLoad(
 			game.ui
-			, component.mSuperMenu.Quit
+			, game.com.mTitil.Quit
 			, "Quit"
 			);
 	assert(e >= 0);
 
-SUPERMENULOOP:
-	gesture = UIGesture(game.ui);
-	switch(gesture.g) {
+TITILLOOP:
+	game.gest = UIGesture(game.ui);
+	switch(game.gest.g) {
 		case eUIGestures_LEN: 
 			assert(0);
 
 		case eUIGestures_SUPERMENU:
 			if(game.hastutorialpassed) {
-				game.supermenu.cursor = eSuperMenu_BACK;
-				goto _eUIGestures_HIT;
+				game.cursor.smenu = eSuperMenu_BACK;
+				goto TITILLOOP_eUIGestures_HIT;
 			}
 			break;
 		case eUIGestures_ESC:
-			game.supermenu.cursor = eSuperMenu_QUIT;
+TITILLOOP_eUIGestures_ESC:
+			game.cursor.smenu = eSuperMenu_QUIT;
 		case eUIGestures_HIT:
-_eUIGestures_HIT:
-			e  = UISelDel(game.ui, component.mSuperMenu.Save);
-			e |= UISelDel(game.ui, component.mSuperMenu.Back);
-			e |= UISelDel(game.ui, component.mSuperMenu.Save);
-			e |= UISelDel(game.ui, component.mSuperMenu.Load);
+TITILLOOP_eUIGestures_HIT:
+			e  = UISelDel(game.ui, game.com.mTitil.Save);
+			e |= UISelDel(game.ui, game.com.mTitil.Back);
+			e |= UISelDel(game.ui, game.com.mTitil.Save);
+			e |= UISelDel(game.ui, game.com.mTitil.Load);
 			assert(e >= 0);
 
-			switch(game.supermenu.cursor) {
+			switch(game.cursor.smenu) {
 				case eSuperMenu_BACK:
+					game.locdest = game.loclast;
+					goto PATHFINDER;
 				case eSuperMenu_LOAD:
+					game.locdest = eUILocs_TITIL_LOAD;
+					goto PATHFINDER;
 				case eSuperMenu_QUIT:
-					goto MAINEND;
+					goto TITILLOOP_eUIGestures_ESC;
 				case eSuperMenu_SAVE:
-				case eSuperMenu_LEN: assert(0);
+					game.locdest = eUILocs_TITIL_SAVE;
+					goto MAINEND;
+				case eSuperMenu_LEN: 
+					assert(0);
 			} assert(0);
 		case eUIGestures_MOV:
-			gesture.extra += game.supermenu.cursor;
+			game.gest.extra += game.cursor.smenu;
 		case eUIGestures_TOGGLE:
-			assert(gesture.extra >= 0);
-			game.supermenu.cursor = gesture.extra % eSuperMenu_LEN;
+			assert(game.gest.extra >= 0);
+			game.cursor.smenu = game.gest.extra % eSuperMenu_LEN;
 		case eUIGestures_NONE:
 			break;
 	}
 
 	e = UILoad(game.ui);
 	assert(e >= 0);
-	goto SUPERMENULOOP;
+	goto TITILLOOP;
+
+TITIL_SAVELOADSTART:
+	game.cursor.saveload = 0;
+
+	assert(UIVerify(game.ui) >= 0);
+	assert(game.com.mTitilSave.Log);
+	assert(game.com.mTitilSave.F[0]);
+	assert(game.com.mTitilSave.F[1]);
+	assert(game.com.mTitilSave.F[2]);
+
+	e =	UILogPuts(
+			game.ui
+			, game.com.mTitilSave.Log
+			, game.locdest == eUILocs_TITIL_LOAD 
+			? "Select your file to load."
+
+			: game.hastutorialpassed 
+			? "Select your file to save." 
+			: "Select your file to erase."
+			);
+
+	e |=	UIFileLoad(game.ui, game.com.mTitilSave.F[0], "File 1");
+	e |=	UIFileLoad(game.ui, game.com.mTitilSave.F[1], "File 2");
+	e |=	UIFileLoad(game.ui, game.com.mTitilSave.F[2], "File 3");
+	e |=	UISelLoad(game.ui, game.com.mTitilSave.Titil, "Go Back");
+	assert(e >= 0);
+
+	/* 
+	 * Fun fact:
+	 * Saving screen and loading screen's UI are quite similar.
+	 * */
+TITIL_SAVELOADLOOP:
+	game.gest = UIGesture(game.ui);
+	switch(game.gest.g) {
+		case eUIGestures_LEN:
+			assert(0);
+
+
+		case eUIGestures_ESC:
+		case eUIGestures_SUPERMENU:
+			game.cursor.saveload = 3; /* Go back */
+		case eUIGestures_HIT:
+			switch(game.cursor.saveload) {
+				case 0:
+				case 1:
+				case 2:
+					if(game.locdest == eUILocs_TITIL_SAVE) 
+					{
+						e = UIFilePuts(
+								game.ui
+								, game.com.mTitilSave.F[game.cursor.saveload]
+								, &game.battle
+								);
+						assert(e >= 0);
+						break;
+					} else {
+						e = UIFileGets(
+								game.ui
+								, game.com.mTitilLoad.F[game.cursor.saveload]
+								, &game.battle
+								);
+						assert(e >= 0);
+						game.locdest = eUILocs_BATTLE;
+						goto TITIL_SAVELOADEND;
+					}
+				case 3:
+					game.locdest = eUILocs_TITIL;
+					goto TITIL_SAVELOADEND;
+				default: assert(0);
+			}
+
+		case eUIGestures_MOV:
+			game.gest.extra += game.cursor.saveload;
+		case eUIGestures_TOGGLE:
+			assert(game.gest.extra >= 0);
+			game.cursor.smenu = game.gest.extra & 3; /* 
+						`		      I have four menu here.
+								      This would be enough since what I need is (N MOD 4).
+								      */
+		case eUIGestures_NONE:
+			break;
+	}
+
+	UILoad(game.ui);
+	goto TITIL_SAVELOADLOOP;
+
+TITIL_SAVELOADEND:
+	e = 	UISelDel(game.ui, game.com.mTitilSave.Titil);
+	e |=	UILogDel(game.ui, game.com.mTitilSave.Log);
+	e |=	UIFileDel(game.ui, game.com.mTitilSave.F[0]);
+	e |=	UIFileDel(game.ui, game.com.mTitilSave.F[1]);
+	e |=	UIFileDel(game.ui, game.com.mTitilSave.F[2]);
+	assert(e >= 0); goto PATHFINDER;
+
+BATTLESTART:
+	e = 0;
+	game.cursor.battle = 0;
+	for(battle_teamc_t ti = 0; ti < game.battle.c; ti++)
+		for(battle_fighterc_t fi = 0; fi < game.battle.v[ti].c; fi++)
+			e |=	UINDLoad(
+					game.ui
+					, game.com.mBattle.Units[UINDBattleIdxer(fi, ti)]
+					, game.battle.v[ti].v[fi].name
+					, game.battle.v[ti].v[fi].desc
+					);	
+
+	e |= UISelLoad(game.ui, game.com.mBattle.Item, "Item");
+	e |= UISelLoad(game.ui, game.com.mBattle.Menu, "Menu");
+	e |= UISelLoad(game.ui, game.com.mBattle.Skill, "Skill");
+	assert(e >- 0);
+BATTLELOOP:
+	assert(UIVerify(game.ui));
+	game.gest = UIGesture(game.ui);
+
+	switch(game.gest.g) {
+		case eUIGestures_LEN: 
+			assert(0);
+
+		/* Supermenu pop up */
+		case eUIGestures_ESC:
+		case eUIGestures_SUPERMENU:
+
+
+		case eUIGestures_MOV:
+		case eUIGestures_TOGGLE:
+
+		case eUIGestures_HIT:
+			/* Team indexer. For one team. */
+			if(game.cursor.battle < game.battle.c) {
+				
+			}
+
+		case eUIGestures_NONE:
+			break;
+			
+	}
+
+	/* Reloading the components. */
+	e = 0;
+	for(battle_teamc_t ti = 0; ti < game.battle.c; ti++)
+		for(battle_fighterc_t fi = 0; fi < game.battle.v[ti].c; fi++)
+			e |=	UINDLoad(game.ui, game.com.mBattle.Units[UINDBattleIdxer(fi, ti)], 0, 0);
+	
+	e |= UISelLoad(game.ui, game.com.mBattle.Item, 	0);
+	e |= UISelLoad(game.ui, game.com.mBattle.Menu, 	0);
+	e |= UISelLoad(game.ui, game.com.mBattle.Skill,	0);
+
+	assert(e >= 0);
+	UILoad(game.ui);
+
+	goto BATTLELOOP;
 }

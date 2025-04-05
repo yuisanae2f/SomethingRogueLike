@@ -62,6 +62,7 @@ configure_file(
 add_library(
 	_INTERFACE
 	INTERFACE
+	"include/err.h"
 	"include/unit.h"
 	"include/ArrLike.h"
 
