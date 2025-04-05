@@ -20,6 +20,9 @@ typedef Unit battle_fighterv_t[BATTLE_FIGHTER_MAX];
 /** @brief battle team count */
 typedef BATTLE_TEAMC_T battle_teamc_t;
 
+/** @brief Cursor type for battle output (Like a progress bar) */
+typedef CURSOR_BATTLE_OUT_T cursor_battle_out_t;
+
 /** 
  * One team as vector. \n
  * It is `ListLike`.

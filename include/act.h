@@ -7,25 +7,33 @@
 #include <ae2f/Cast.h>
 
 typedef struct	UI		UI;
-
+typedef struct	UIComBattleIdle	UIComBattleIdle;
 typedef struct	Unit 		Unit;
 typedef struct	Battle 		Battle;
 typedef BATTLE_TEAMC_T		battle_teamc_t;
 typedef BATTLE_FIGHTERC_T	battle_fighterc_t;
+typedef CURSOR_BATTLE_OUT_T	cursor_battle_out_t;
+
+#define act_FIRSTMOVE	0
+#define act_END		-1
 
 /**
- * The behaviour
+ * @brief
+ * The behaviour of one.
+ * Meant to be iteratively called.
  * */
 typedef err_t act_t(
-		Unit*,			// the one casting this
-		Battle*,		// battlefield
-		battle_teamc_t, 	// team index
-		battle_fighterc_t, 	// fighter index (target)
-		UI*			// ui api
-		);
+		UI*,			/** @param UI */
+		Unit*,			/** @param the one casting this			*/	
+		Battle*,		/** @param battlefield				*/
+		battle_teamc_t, 	/** @param team index		(target)	*/
+		battle_fighterc_t, 	/** @param fighter index	(target)	*/
+		cursor_battle_out_t*,	/** @param 
 
-typedef err_t actidle_t(
-		
+					  as an input:	an order(cursor).	When 0, suggest it as first move.
+					  as an output:	the next order(cursor). When act_END, stop.
+					  */
+		UIComBattleIdle*
 		);
 
 /** @brief Actions Enum */
@@ -47,20 +55,24 @@ typedef struct Act {
 	ae2f_WhenC(enum) eActs act;
 #if ae2f_WhenCXX(!)0
 	inline err_t Invoke(
-			Unit* unit, 
-			Battle* battle, 
-			battle_teamc_t teamc, 
-			battle_fighterc_t fighterc,  
-			UI* ui 
+			UI*			ui,
+			Unit*			unit, 
+			Battle* 		battle, 
+			battle_teamc_t		teamc, 
+			battle_fighterc_t	fighterc,  
+			cursor_battle_out_t*	p_cursor,
+			UIComBattleIdle*	p_uicomponent
 			)
 	{
 		return ActInvoke(
-				this
+				ui
+				, this
 				, unit
 				, battle
 				, teamc
 				, fighterc
-				, ui
+				, p_cursor
+				, p_uicomponent
 				);
 	}
 #endif

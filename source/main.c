@@ -18,7 +18,6 @@ err_t GameMain(Game* p_game) {
 	 * Here, it will check `dest` for destination.
 	 * */
 PATHFINDER:
-
 	/* Global initiation sector */
 	assert(game.locdest != eUILocs_LEN);
 	assert(UIVerify(game.ui) >= 0);
@@ -41,6 +40,9 @@ PATHFINDER:
 
 		case eUILocs_BATTLE:
 			goto BATTLESTART;
+
+		case eUILocs_BATTLE_TEAM:
+			goto TEAMSTART;
 	}
 
 	return -1; /* Finding path has failed. */
@@ -232,7 +234,8 @@ TITIL_SAVELOADLOOP:
 	goto TITIL_SAVELOADLOOP;
 
 TITIL_SAVELOADEND:
-	e = 	UISelDel(game.ui, game.com.mTitilSave.Titil);
+	e =	UIVerify(game.ui);
+	e |= 	UISelDel(game.ui, game.com.mTitilSave.Titil);
 	e |=	UILogDel(game.ui, game.com.mTitilSave.Log);
 	e |=	UIFileDel(game.ui, game.com.mTitilSave.F[0]);
 	e |=	UIFileDel(game.ui, game.com.mTitilSave.F[1]);
@@ -241,6 +244,8 @@ TITIL_SAVELOADEND:
 
 BATTLESTART:
 	e = 0;
+	e |= UIVerify(game.ui);
+
 	game.cursor.battle = 0;
 	for(battle_teamc_t ti = 0; ti < game.battle.c; ti++)
 		for(battle_fighterc_t fi = 0; fi < game.battle.v[ti].c; fi++)
@@ -254,33 +259,80 @@ BATTLESTART:
 	e |= UISelLoad(game.ui, game.com.mBattle.Item, "Item");
 	e |= UISelLoad(game.ui, game.com.mBattle.Menu, "Menu");
 	e |= UISelLoad(game.ui, game.com.mBattle.Skill, "Skill");
-	assert(e >- 0);
+	assert(e >= 0);
 BATTLELOOP:
-	assert(UIVerify(game.ui));
+	assert(UIVerify(game.ui) >= 0);
 	game.gest = UIGesture(game.ui);
 
+	if(game.turnID)
+		goto BATTLELOOP_TURN_OTHERS;
+
+
+BATTLELOOP_TURN_YOURS:
 	switch(game.gest.g) {
 		case eUIGestures_LEN: 
 			assert(0);
 
+		case eUIGestures_MOV:
+			game.gest.extra += game.cursor.battle;
+		case eUIGestures_TOGGLE:
+			game.cursor.battle = game.gest.extra % game.battle.c + 2;
+			break;
+
 		/* Supermenu pop up */
 		case eUIGestures_ESC:
 		case eUIGestures_SUPERMENU:
-
-
-		case eUIGestures_MOV:
-		case eUIGestures_TOGGLE:
+			game.cursor.battle = game.battle.c + 1; /* index, last, which will let you to TITIL. */
 
 		case eUIGestures_HIT:
 			/* Team indexer. For one team. */
 			if(game.cursor.battle < game.battle.c) {
-				
+				game.fighter = game.cursor.battle;
+				game.locdest = eUILocs_BATTLE_TEAM;
+			} else {
+				switch(game.cursor.battle - game.battle.c)
+				{
+					case 0: /* Inventory */
+						game.locdest = eUILocs_BATTLE_INV;
+						break;
+					case 1: /* TITIL */
+						game.locdest = eUILocs_TITIL;
+						break;
+					default:
+						assert(0); /* I don't know you */
+				}
 			}
 
+			goto BATTLEEND;
 		case eUIGestures_NONE:
-			break;
-			
+			break;	
 	}
+
+	goto BATTLELOOP_LOAD;
+
+	/* 
+	 * It is not your turn.
+	 *
+	 * This will basically work as an output for your input,
+	 * which stands for "your turn".
+	 * */
+BATTLELOOP_TURN_OTHERS:
+	switch(game.gest.g) {
+BATTLELOOP_TURN_OTHERS_IDLE:
+		default:
+			break;
+		case eUIGestures_HIT:
+			if(!UIIsReady(game.ui)) {
+				e = UIForceReady(game.ui);
+				assert(e >= 0);
+				goto BATTLELOOP_TURN_OTHERS_IDLE;
+			}
+			break;
+	}
+	goto BATTLELOOP_LOAD;
+
+	/* Or so it is called rendering. */
+BATTLELOOP_LOAD:
 
 	/* Reloading the components. */
 	e = 0;
@@ -296,4 +348,23 @@ BATTLELOOP:
 	UILoad(game.ui);
 
 	goto BATTLELOOP;
+	
+BATTLEEND:
+	
+	e = 0;
+	for(battle_teamc_t ti = 0; ti < game.battle.c; ti++)
+		for(battle_fighterc_t fi = 0; fi < game.battle.v[ti].c; fi++)
+			e |= UINDDel(game.ui, game.com.mBattle.Units[UINDBattleIdxer(fi, ti)]);
+
+	e |= UISelDel(game.ui, game.com.mBattle.Item);
+	e |= UISelDel(game.ui, game.com.mBattle.Menu);
+	e |= UISelDel(game.ui, game.com.mBattle.Skill);
+
+	assert(e >= 0);
+	goto PATHFINDER;
+
+TEAMSTART:
+TEAMLOOP:
+TEAMEND:
+	assert(0);
 }

@@ -14,7 +14,6 @@
 #include "./str.h"
 #include "./err.h"
 
-
 /** @brief General IO */
 typedef struct UI		UI;
 
@@ -33,13 +32,30 @@ typedef struct UILog		UILog;
 /** @brief The components related to UI. */
 typedef union UIComponent 	UIComponent;
 
-/** @brief
+/** 
+ * @brief
  * UI for file (save, load).
+ * Opening files when making a new object is the expected behaviour.
  * */
 typedef struct UIFile		UIFile;
 
+#define UIIsReady_YES	1
+#define UIIsReady_NO	0
+
+/** @todo Tell if UI ready to change. */
+ae2f_extern ae2f_SHAREDCALL
+bool UIIsReady(
+		UI*
+		);
+
+/** @todo Make UI ready at all cost. */
+ae2f_extern ae2f_SHAREDCALL
+err_t UIForceReady(
+		UI*
+		);
+
 /**
- * @brief
+ * @todo
  * Reload the UIND, as str_t and strlong_t
  *
  * Changes are not meant to be done for this function.
@@ -50,6 +66,12 @@ err_t UINDLoad(
 		, UIND*
 		, const str_t
 		, const strlong_t
+		);
+
+ae2f_extern ae2f_SHAREDCALL
+err_t UINDDel(
+		UI*
+		, UIND*
 		);
 
 ae2f_extern ae2f_SHAREDCALL
@@ -96,8 +118,8 @@ typedef enum eUIGestures {
 } eUIGestures;
 
 typedef struct UIGesture_t {
-	eUIGestures g;	/* gesture */
-	int extra;	/* extra */
+	eUIGestures g;	/** @brief gesture */
+	int extra;	/** @brief extra */
 }  UIGesture_t;
 
 typedef struct Battle Battle;
@@ -135,7 +157,7 @@ ae2f_extern ae2f_SHAREDCALL
 UI* UIMk();
 
 /**
- * @brief Change, or initiate the state.
+ * @todo Change, or initiate the state.
  * */
 ae2f_extern ae2f_SHAREDCALL
 err_t UIInit(
@@ -161,17 +183,17 @@ err_t UIInit(
 /* Reload */
 #define UILoad(ui) UIInit(ui, 0, eUILocs_NONE, 0)
 
-/** @brief Kill UI. */
+/** @todo Kill UI. */
 ae2f_extern ae2f_SHAREDCALL
 err_t UIDel(UI*);
 
-/** @brief Convert something to gesture */
+/** @todo Convert something to gesture */
 ae2f_extern ae2f_SHAREDCALL
 UIGesture_t UIGesture(
 		UI* 
 		);
 
-/** @brief 
+/** @todo 
  * Check UI's current state (is it able to function)
  * */
 ae2f_extern ae2f_SHAREDCALL
@@ -184,14 +206,14 @@ err_t UILogPuts(
 		const char_t*
 		);
 
-/** @brief Clear the Log, like `cls` or `clear` on terminal output. */
+/** @todo Clear the Log, like `cls` or `clear` on terminal output. */
 ae2f_extern ae2f_SHAREDCALL
 err_t UILogClear(
 		UI*,
 		UILog*
 		);
 
-/** @brief Kill the log, I mean, release the log. */
+/** @todo Kill the log, I mean, release the log. */
 ae2f_extern ae2f_SHAREDCALL
 err_t UILogDel(
 		UI*,
@@ -205,14 +227,14 @@ err_t UIErrLogPuts(
 		);
 
 /**
- * @brief
+ * @todo
  * Load the selection.
  * */
 ae2f_extern ae2f_SHAREDCALL
 err_t	UISelLoad(UI*, UISel*, const str_t);
 
 /**
- * @brief
+ * @todo
  * Kill UISel made with `UISelBattleMk`
  *
  * */
@@ -223,6 +245,9 @@ err_t	UISelDel(UI*, UISel*);
 
 typedef unsigned char	UIFilec_t;
 #define UIFile_MAX	3
+
+/** @brief type of UIComponent::mBattleIdle */
+typedef struct UIComBattleIdle	UIComBattleIdle;
 
 union UIComponent {
 	struct {
@@ -246,9 +271,13 @@ union UIComponent {
 			* Item,		/** @brief 1 */
 			* Menu;		/** @brief 2 */
 	} mBattle;
+
+	struct ae2f_WhenCXX(::) UIComBattleIdle {
+
+	} mBattleIdle;
 };
 
-/** @brief Save battles to files */
+/** @todo Save battles to files */
 ae2f_extern ae2f_SHAREDCALL
 err_t 	UIFilePuts(
 		UI*
@@ -256,7 +285,7 @@ err_t 	UIFilePuts(
 		, const Battle*
 		);
 
-/** @brief Load battles from files */
+/** @todo Load battles from files */
 ae2f_extern ae2f_SHAREDCALL
 err_t	UIFileGets(
 		UI*

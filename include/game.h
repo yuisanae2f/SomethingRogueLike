@@ -5,9 +5,6 @@
 #include "./UI.h"
 #include "./supermenu.h"
 
-typedef BATTLE_TEAMC_T battle_teamc_t;
-typedef struct Battle Battle;
-
 /** @brief 
  * Game itself. 
  * Contains all logic for game.
@@ -32,7 +29,13 @@ typedef struct Game {
 	 * */
 	UIComponent com;
 
-	eUILocs 
+	/** @brief 
+	 * Your turn ID which is given.
+	 * 0 means it is your turn.
+	 * */
+	battle_teamc_t turnID;
+
+	eUILocs
 		/**
 		 * @brief
 		 * This shows which state is in `Game`.
@@ -52,7 +55,7 @@ typedef struct Game {
 
 
 
-	/** Gesture, or input for Game::ui */
+	/** @brief Gesture, or input for Game::ui */
 	UIGesture_t gest;
 	
 	union {
@@ -75,6 +78,9 @@ typedef struct Game {
 		 * - Save
 		 * - Load
 		 * - Exit
+		 *
+		 * @todo
+		 * Define its custom type in order to make it flexible
 		 * */
 		eSuperMenu_t smenu;
 
@@ -83,8 +89,21 @@ typedef struct Game {
 		 * First sector will be full for indexer of one team of yours. \n
 		 * Last-1 of it will try to open inventory, which is shared for one team.
 		 * Last of it will let you to TITIL.
+		 *
+		 * @todo
+		 * Define its custom type in order to make it flexible
 		 * */
 		unsigned char battle;
+
+		/**
+		 * @brief
+		 * Cursor for the dialog so it could show them where they should see.
+		 * It is like a progress bar.
+		 *
+		 * @todo
+		 * Define its custom type in order to make it flexible.
+		 * */
+		cursor_battle_out_t battle_output;
 	}
 	/** 
 	 * @brief 
@@ -95,6 +114,10 @@ typedef struct Game {
 	 * Each cursor must be temporary.
 	 * */
 	cursor;
+
+	/** @brief Selected fighter on BATTLE. */
+	battle_fighterc_t fighter;
+
 } Game;
 
 #endif

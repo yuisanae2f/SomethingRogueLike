@@ -9,3 +9,6 @@
 
 /** @brief Battle Team Count Type */
 #define BATTLE_TEAMC_T	@BATTLE_TEAMC_T@
+
+/** @brief Cursor type for battle output (Like a progress bar) */
+#define CURSOR_BATTLE_OUT_T @CURSOR_BATTLE_OUT_T@

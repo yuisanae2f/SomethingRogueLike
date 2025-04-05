@@ -18,6 +18,8 @@ set(INV_ITEMC_T		"unsigned char")
 set(SKILL_MAX		3)
 set(SKILLC_T		"unsigned char")
 
+set(CURSOR_BATTLE_OUT_T "unsigned char")
+
 # Battle Fighter Max Count
 set(BATTLE_FIGHTER_MAX 3)
 
