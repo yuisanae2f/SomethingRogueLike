@@ -22,7 +22,7 @@ PATHFINDER:
 	assert(game.locdest != eUILocs_LEN);
 	assert(UIVerify(game.ui) >= 0);
 
-	if(!game.hastutorialpassed)
+	if(!game.battle.ActQueued)
 		goto MAINSTART;
 
 	e = UIInit(game.ui, 0, game.locdest, &game.com);
@@ -43,6 +43,9 @@ PATHFINDER:
 
 		case eUILocs_BATTLE_TEAM:
 			goto TEAMSTART;
+
+		case eUILocs_BATTLE_INV:
+			goto INVSTART;
 	}
 
 	return -1; /* Finding path has failed. */
@@ -77,7 +80,7 @@ TITILSTART:
 	e  = UISelLoad(
 			game.ui
 			, game.com.mTitil.Back
-			, game.hastutorialpassed 
+			, game.battle.ActQueued 
 			? "Back to game" : "New Game"
 			);
 	e |= UISelLoad(
@@ -104,7 +107,7 @@ TITILLOOP:
 			assert(0);
 
 		case eUIGestures_SUPERMENU:
-			if(game.hastutorialpassed) {
+			if(game.battle.ActQueued) {
 				game.cursor.smenu = eSuperMenu_BACK;
 				goto TITILLOOP_eUIGestures_HIT;
 			}
@@ -163,7 +166,7 @@ TITIL_SAVELOADSTART:
 			, game.locdest == eUILocs_TITIL_LOAD 
 			? "Select your file to load."
 
-			: game.hastutorialpassed 
+			: game.battle.ActQueued 
 			? "Select your file to save." 
 			: "Select your file to erase."
 			);
@@ -254,19 +257,33 @@ BATTLESTART:
 					, game.com.mBattle.Units[UINDBattleIdxer(fi, ti)]
 					, game.battle.v[ti].v[fi].name
 					, game.battle.v[ti].v[fi].desc
-					);	
+					);
 
-	e |= UISelLoad(game.ui, game.com.mBattle.Item, "Item");
-	e |= UISelLoad(game.ui, game.com.mBattle.Menu, "Menu");
-	e |= UISelLoad(game.ui, game.com.mBattle.Skill, "Skill");
+	if(game.battle.ActQueued || game.turnID != game.battle.turn) {
+		e |= UISelLoad(game.ui, game.com.mBattleIdle.Menu, "Menu");
+		game.battle.act_idx = 0;
+	}
+	else {
+		e |= UISelLoad(game.ui, game.com.mBattle.Item, "Item");
+		e |= UISelLoad(game.ui, game.com.mBattle.Menu, "Menu");
+		e |= UISelLoad(game.ui, game.com.mBattle.Skill, "Skill");
+	}
+
 	assert(e >= 0);
+
 BATTLELOOP:
 	assert(UIVerify(game.ui) >= 0);
 	game.gest = UIGesture(game.ui);
 
-	if(game.turnID)
+	if(game.battle.ActQueued)
+		/* Queued act exists. Invoke them. */
 		goto BATTLELOOP_TURN_OTHERS;
+	else if(game.battle.turn != game.turnID) {
+		/** @todo Let the computer decide what to do. */
 
+		assert(0); /* Kill this after implementation */
+		goto BATTLELOOP_TURN_OTHERS;
+	}
 
 BATTLELOOP_TURN_YOURS:
 	switch(game.gest.g) {
@@ -287,7 +304,7 @@ BATTLELOOP_TURN_YOURS:
 		case eUIGestures_HIT:
 			/* Team indexer. For one team. */
 			if(game.cursor.battle < game.battle.c) {
-				game.fighter = game.cursor.battle;
+				game.battle.ActCommand.ifighter = game.cursor.battle;
 				game.locdest = eUILocs_BATTLE_TEAM;
 			} else {
 				switch(game.cursor.battle - game.battle.c)
@@ -302,7 +319,6 @@ BATTLELOOP_TURN_YOURS:
 						assert(0); /* I don't know you */
 				}
 			}
-
 			goto BATTLEEND;
 		case eUIGestures_NONE:
 			break;	
@@ -315,17 +331,56 @@ BATTLELOOP_TURN_YOURS:
 	 *
 	 * This will basically work as an output for your input,
 	 * which stands for "your turn".
+	 *
+	 * Supermenu would be able
 	 * */
 BATTLELOOP_TURN_OTHERS:
+	assert(game.battle.turn != game.turnID);
 	switch(game.gest.g) {
+		case eUIGestures_ESC:
+			goto BATTLELOOP_TURN_OTHERS_ESC;
+
+		case eUIGestures_LEN:
+			assert(0);
 BATTLELOOP_TURN_OTHERS_IDLE:
-		default:
+			assert(game.battle.turn != game.turnID);
+		case eUIGestures_TOGGLE:
+			game.cursor.battle_output = game.gest.extra & 1;
 			break;
+
+		case eUIGestures_NONE:
+		case eUIGestures_MOV:
+			break;
+
+		case eUIGestures_SUPERMENU:
+			game.cursor.battle_output = 1; /* TIITL */
+
 		case eUIGestures_HIT:
-			if(!UIIsReady(game.ui)) {
-				e = UIForceReady(game.ui);
-				assert(e >= 0);
-				goto BATTLELOOP_TURN_OTHERS_IDLE;
+			if(game.cursor.battle_output) { 
+				/* TITIL */
+				game.locdest = eUILocs_TITIL;
+				goto BATTLEEND;
+			}
+			else {
+				if(UIIsReady(game.ui)) {
+					if(game.battle.act_idx == (cursor_battle_out_t)-1) {
+						/* It met the end. Done. */
+
+					}
+
+					e = (game.battle.ActQueued % eActs_LEN)[Acts](
+							game.ui
+							, &game.battle
+							, &game.com.mBattleIdle
+							);
+					assert(e >= 0);
+				}
+				else {
+BATTLELOOP_TURN_OTHERS_ESC:
+					e = UIForceReady(game.ui);
+					assert(e >= 0);
+					goto BATTLELOOP_TURN_OTHERS_IDLE;
+				}
 			}
 			break;
 	}
@@ -335,35 +390,32 @@ BATTLELOOP_TURN_OTHERS_IDLE:
 BATTLELOOP_LOAD:
 
 	/* Reloading the components. */
-	e = 0;
-	for(battle_teamc_t ti = 0; ti < game.battle.c; ti++)
-		for(battle_fighterc_t fi = 0; fi < game.battle.v[ti].c; fi++)
-			e |=	UINDLoad(game.ui, game.com.mBattle.Units[UINDBattleIdxer(fi, ti)], 0, 0);
-	
-	e |= UISelLoad(game.ui, game.com.mBattle.Item, 	0);
-	e |= UISelLoad(game.ui, game.com.mBattle.Menu, 	0);
-	e |= UISelLoad(game.ui, game.com.mBattle.Skill,	0);
-
+	e = UIVerify(game.ui);
+	e |= UILoad(game.ui);
 	assert(e >= 0);
-	UILoad(game.ui);
 
 	goto BATTLELOOP;
 	
 BATTLEEND:
-	
-	e = 0;
+	e = UIVerify(game.ui);
 	for(battle_teamc_t ti = 0; ti < game.battle.c; ti++)
 		for(battle_fighterc_t fi = 0; fi < game.battle.v[ti].c; fi++)
 			e |= UINDDel(game.ui, game.com.mBattle.Units[UINDBattleIdxer(fi, ti)]);
 
-	e |= UISelDel(game.ui, game.com.mBattle.Item);
-	e |= UISelDel(game.ui, game.com.mBattle.Menu);
-	e |= UISelDel(game.ui, game.com.mBattle.Skill);
+	e |= UILogDel(game.ui, game.com.mBattle.Log);
+
+	if(game.battle.ActQueued) {
+		e |= UISelDel(game.ui, game.com.mBattleIdle.Menu);
+	} else {	
+		e |= UISelDel(game.ui, game.com.mBattle.Item);
+		e |= UISelDel(game.ui, game.com.mBattle.Menu);
+		e |= UISelDel(game.ui, game.com.mBattle.Skill);
+	}
 
 	assert(e >= 0);
 	goto PATHFINDER;
-
 TEAMSTART:
+	
 TEAMLOOP:
 TEAMEND:
 	assert(0);

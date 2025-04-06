@@ -4,6 +4,7 @@
 #include "./battle.h"
 #include "./UI.h"
 #include "./supermenu.h"
+#include "./act.h"
 
 /** @brief 
  * Game itself. 
@@ -18,9 +19,6 @@
 typedef struct Game {
 	Battle battle;
 	UI* ui;
-
-	/** @brief aka is the game just started now? */
-	bool hastutorialpassed;
 
 	/** 
 	 * @brief
@@ -95,15 +93,13 @@ typedef struct Game {
 		 * */
 		unsigned char battle;
 
+
 		/**
 		 * @brief
-		 * Cursor for the dialog so it could show them where they should see.
-		 * It is like a progress bar.
-		 *
-		 * @todo
-		 * Define its custom type in order to make it flexible.
+		 * 0: Progress
+		 * 1: SuperMenu
 		 * */
-		cursor_battle_out_t battle_output;
+		bool battle_output;
 	}
 	/** 
 	 * @brief 
@@ -115,9 +111,7 @@ typedef struct Game {
 	 * */
 	cursor;
 
-	/** @brief Selected fighter on BATTLE. */
-	battle_fighterc_t fighter;
-
+	
 } Game;
 
 #endif

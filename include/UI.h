@@ -241,13 +241,14 @@ err_t	UISelLoad(UI*, UISel*, const str_t);
 ae2f_extern ae2f_SHAREDCALL
 err_t	UISelDel(UI*, UISel*);
 
-#include "./battle.h"
+#include "./battle.auto.h"
 
 typedef unsigned char	UIFilec_t;
 #define UIFile_MAX	3
 
 /** @brief type of UIComponent::mBattleIdle */
 typedef struct UIComBattleIdle	UIComBattleIdle;
+typedef CURSOR_BATTLE_OUT_T cursor_battle_out_t;
 
 union UIComponent {
 	struct {
@@ -266,6 +267,7 @@ union UIComponent {
 
 	struct {
 		UIND*	Units[UINDBattleSz];
+		UILog*	Log;
 		UISel
 			* Skill,	/** @brief 0 */
 			* Item,		/** @brief 1 */
@@ -273,7 +275,9 @@ union UIComponent {
 	} mBattle;
 
 	struct ae2f_WhenCXX(::) UIComBattleIdle {
-
+		UIND*	Units[UINDBattleSz];
+		UILog*	Log;
+		UISel* 	Menu;		/** @brief 1: aka TITIL */
 	} mBattleIdle;
 };
 

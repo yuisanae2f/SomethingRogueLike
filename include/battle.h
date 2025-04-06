@@ -68,14 +68,42 @@ typedef struct Battle {
 		/** @brief team count */
 		c, 
 		/** @brief whose turn is it */
-		turn,
-		/** @brief index of player */
-		whoareyou;
+		turn;
 
 	ArrLikeInjection(
 			, Battle_Team
 			, battle_teamc_t
 			);
+
+	struct {
+		/** @brief Opposite's team */
+		battle_teamc_t oteam;
+
+		battle_fighterc_t
+			/** @brief 
+			 * Selected fighter on BATTLE. 
+			 * Its turn equals to Battle::turn
+			 * */
+			ifighter
+
+			/** @brief For opposite's team */
+			, ofighter;
+	} ActCommand; /** @brief Target finding index for ActQueued. */
+
+
+	/** @brief Act which is queued; */
+	eActs_t ActQueued;
+
+	/**
+	 * @brief
+	 * Cursor for the dialog so it could show them where they should see.
+	 * It is like a progress bar.
+	 *
+	 * @todo
+	 * Define its custom type in order to make it flexible.
+	 * */
+	cursor_battle_out_t act_idx;
+
 } Battle;
 
 #endif
